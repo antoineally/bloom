@@ -8,8 +8,14 @@ const {
     Routes
 } = require('discord.js');
 
-const mysql = require('mysql2/promise');
 require('dotenv').config();
+
+/* =========================
+   SQLITE (BETTER-SQLITE3)
+========================= */
+
+const Database = require("better-sqlite3");
+const db = new Database("database.db");
 
 /* =========================
    CLIENT DISCORD
@@ -28,10 +34,15 @@ client.commands = new Collection();
 const commands = [];
 
 /* =========================
-   MYSQL (GLOBAL)
+   TABLE INIT SQLITE
 ========================= */
 
-let db;
+db.prepare(`
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    coins INTEGER DEFAULT 0
+)
+`).run();
 
 /* =========================
    CHARGEMENT COMMANDES
@@ -45,24 +56,23 @@ if (fs.existsSync(commandsPath)) {
     const commandFiles = fs.readdirSync(commandsPath)
         .filter(file => file.endsWith('.js'));
 
-    console.log(`📄 ${commandFiles.length} fichier(s) trouvé(s)`);
+    console.log(`📄 ${commandFiles.length} commande(s) trouvée(s)`);
 
     for (const file of commandFiles) {
         try {
-            const filePath = path.join(commandsPath, file);
-            const command = require(filePath);
+            const command = require(path.join(commandsPath, file));
 
             if (!command.data || !command.execute) {
-                console.warn(`⚠️ ${file} ignoré (data ou execute manquant)`);
+                console.warn(`⚠️ ${file} ignoré`);
                 continue;
             }
 
             client.commands.set(command.data.name, command);
             commands.push(command.data.toJSON());
 
-            console.log(`✅ Commande chargée : ${command.data.name}`);
-        } catch (error) {
-            console.error(`❌ Erreur dans ${file} :`, error);
+            console.log(`✅ Chargé : ${command.data.name}`);
+        } catch (err) {
+            console.error(`❌ Erreur ${file} :`, err);
         }
     }
 }
@@ -95,26 +105,11 @@ if (fs.existsSync(eventsPath)) {
 client.once('ready', async () => {
     console.log(`🤖 Connecté en tant que ${client.user.tag}`);
 
-    /* 🔥 MYSQL CONNECTION */
+    const rows = db.prepare("SELECT * FROM users").all();
+    console.log("📋 Users :", rows);
+
     try {
-        db = await mysql.createConnection({
-            host: "localhost",
-            user: "root",
-            password: "password",
-            database: "test"
-        });
-
-        global.db = db;
-
-        console.log("✅ Connecté à MySQL");
-    } catch (err) {
-        console.error("❌ Erreur MySQL :", err);
-    }
-
-    /* 🚀 DEPLOY COMMANDS */
-    try {
-        const rest = new REST({ version: '10' })
-            .setToken(process.env.TOKEN);
+        const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
         await rest.put(
             Routes.applicationGuildCommands(
@@ -126,7 +121,7 @@ client.once('ready', async () => {
 
         console.log(`🚀 ${commands.length} commande(s) déployée(s)`);
     } catch (error) {
-        console.error('❌ Erreur de déploiement :', error);
+        console.error('❌ Erreur deploy commands:', error);
     }
 });
 
@@ -138,23 +133,17 @@ client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
-
     if (!command) return;
 
     try {
-        await command.execute(interaction);
+        await command.execute(interaction, db);
     } catch (error) {
         console.error(error);
 
         if (interaction.replied || interaction.deferred) {
-            await interaction.editReply({
-                content: '❌ Une erreur est survenue.'
-            });
+            await interaction.editReply('❌ Erreur.');
         } else {
-            await interaction.reply({
-                content: '❌ Une erreur est survenue.',
-                ephemeral: true
-            });
+            await interaction.reply({ content: '❌ Erreur.', ephemeral: true });
         }
     }
 });
