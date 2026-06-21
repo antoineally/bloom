@@ -1,46 +1,54 @@
-const Database = require('better-sqlite3');
-const db = new Database('./data/birthdays.db');
+const fs = require("fs");
+const path = require("path");
 
-// init table
-db.prepare(`
-    CREATE TABLE IF NOT EXISTS birthdays (
-        userId TEXT PRIMARY KEY,
-        date TEXT NOT NULL
-    )
-`).run();
+const DB_PATH = path.join(__dirname, "../data/birthdays.json");
 
-function load() {
-    return db.prepare(`
-        SELECT userId, date FROM birthdays
-    `).all().reduce((acc, row) => {
-        acc[row.userId] = row.date;
-        return acc;
-    }, {});
+/* ================= LOAD ================= */
+function loadBirthdays() {
+  try {
+    if (!fs.existsSync(DB_PATH)) return {};
+
+    const raw = fs.readFileSync(DB_PATH, "utf8");
+    return JSON.parse(raw || "{}");
+  } catch (err) {
+    console.error("Load error:", err);
+    return {};
+  }
 }
 
-function setBirthday(userId, date) {
-    db.prepare(`
-        INSERT INTO birthdays (userId, date)
-        VALUES (?, ?)
-        ON CONFLICT(userId) DO UPDATE SET date = excluded.date
-    `).run(userId, date);
+/* ================= SAVE (SAFE) ================= */
+function saveBirthdays(data) {
+  try {
+    const tmpPath = DB_PATH + ".tmp";
+
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2));
+    fs.renameSync(tmpPath, DB_PATH);
+  } catch (err) {
+    console.error("Save error:", err);
+  }
 }
 
-function removeBirthday(userId) {
-    db.prepare(`
-        DELETE FROM birthdays WHERE userId = ?
-    `).run(userId);
+/* ================= ADD ================= */
+function addBirthday(userId, date) {
+  const db = loadBirthdays();
+
+  db[userId] = {
+    date,
+    updatedAt: Date.now(),
+  };
+
+  saveBirthdays(db);
 }
 
+/* ================= GET ================= */
 function getBirthday(userId) {
-    return db.prepare(`
-        SELECT date FROM birthdays WHERE userId = ?
-    `).get(userId);
+  const db = loadBirthdays();
+  return db[userId] || null;
 }
 
 module.exports = {
-    load,
-    setBirthday,
-    removeBirthday,
-    getBirthday
+  loadBirthdays,
+  saveBirthdays,
+  addBirthday,
+  getBirthday,
 };

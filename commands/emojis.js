@@ -13,11 +13,17 @@ const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 /* =========================
+   NORMALISATION EMOJI
+========================= */
+
+const normalizeEmoji = (e) =>
+  Array.from(String(e).normalize("NFC")).join("");
+
+/* =========================
    EMOJI DATABASE COMPLETE
 ========================= */
 
 const emojiData = {
-
   /* ================= COMBAT ================= */
   "👊": { category: "combat", query: "punch", messages: ["{user} hits {target} 👊"] },
   "🤜": { category: "combat", query: "punch hit", messages: ["{user} strikes {target} 🤜"] },
@@ -92,6 +98,17 @@ const emojiData = {
 };
 
 /* =========================
+   NORMALIZED MAP
+========================= */
+
+const emojiDataNormalized = Object.fromEntries(
+  Object.entries(emojiData).map(([emoji, data]) => [
+    normalizeEmoji(emoji),
+    data,
+  ])
+);
+
+/* =========================
    GIF FETCH
 ========================= */
 
@@ -113,7 +130,7 @@ async function getGif(query) {
 }
 
 /* =========================
-   COMMAND BUILDER
+   COMMAND
 ========================= */
 
 module.exports = {
@@ -121,34 +138,40 @@ module.exports = {
     .setName("gif")
     .setDescription("Generate an interaction GIF based on an emoji")
 
-    .addSubcommand(cmd => cmd.setName("combat").setDescription("Generate a combat emoji GIF 👊 targeting a user")
-      .addStringOption(o => o.setName("emoji").setDescription("Emoji").setRequired(true).setAutocomplete(true))
-      .addUserOption(o => o.setName("target").setDescription("Target user").setRequired(true))
+    .addSubcommand(cmd =>
+      cmd.setName("combat").setDescription("Combat GIF")
+        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
+        .addUserOption(o => o.setName("target").setRequired(true))
     )
 
-    .addSubcommand(cmd => cmd.setName("powers").setDescription("Generate a powers emoji GIF ✨ targeting a user")
-      .addStringOption(o => o.setName("emoji").setDescription("Emoji").setRequired(true).setAutocomplete(true))
-      .addUserOption(o => o.setName("target").setDescription("Target user").setRequired(true))
+    .addSubcommand(cmd =>
+      cmd.setName("powers").setDescription("Powers GIF")
+        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
+        .addUserOption(o => o.setName("target").setRequired(true))
     )
 
-    .addSubcommand(cmd => cmd.setName("reactions").setDescription("Generate a reactions emoji GIF 😂 targeting a user")
-      .addStringOption(o => o.setName("emoji").setDescription("Emoji").setRequired(true).setAutocomplete(true))
-      .addUserOption(o => o.setName("target").setDescription("Target user").setRequired(true))
+    .addSubcommand(cmd =>
+      cmd.setName("reactions").setDescription("Reactions GIF")
+        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
+        .addUserOption(o => o.setName("target").setRequired(true))
     )
 
-    .addSubcommand(cmd => cmd.setName("affection").setDescription("Generate an affection emoji GIF 🤗 targeting a user")
-      .addStringOption(o => o.setName("emoji").setDescription("Emoji").setRequired(true).setAutocomplete(true))
-      .addUserOption(o => o.setName("target").setDescription("Target user").setRequired(true))
+    .addSubcommand(cmd =>
+      cmd.setName("affection").setDescription("Affection GIF")
+        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
+        .addUserOption(o => o.setName("target").setRequired(true))
     )
 
-    .addSubcommand(cmd => cmd.setName("suggestive").setDescription("Generate a suggestive emoji GIF 😏 targeting a user")
-      .addStringOption(o => o.setName("emoji").setDescription("Emoji").setRequired(true).setAutocomplete(true))
-      .addUserOption(o => o.setName("target").setDescription("Target user").setRequired(true))
+    .addSubcommand(cmd =>
+      cmd.setName("suggestive").setDescription("Suggestive GIF")
+        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
+        .addUserOption(o => o.setName("target").setRequired(true))
     )
 
-    .addSubcommand(cmd => cmd.setName("troll").setDescription("Generate a troll emoji GIF 🤡 targeting a user")
-      .addStringOption(o => o.setName("emoji").setDescription("Emoji").setRequired(true).setAutocomplete(true))
-      .addUserOption(o => o.setName("target").setDescription("Target user").setRequired(true))
+    .addSubcommand(cmd =>
+      cmd.setName("troll").setDescription("Troll GIF")
+        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
+        .addUserOption(o => o.setName("target").setRequired(true))
     ),
 
   /* =========================
@@ -158,27 +181,24 @@ module.exports = {
   async autocomplete(interaction) {
     const focused = interaction.options.getFocused(true);
     const sub = interaction.options.getSubcommand();
-
-    const list = Object.keys(emojiData).filter(
-        e => emojiData[e].category === sub
-    );
-
     const search = (focused.value || "").toLowerCase();
 
-    const filtered = list.filter(e => {
-        const query = (emojiData[e].query || "").toLowerCase();
+    const list = Object.keys(emojiData).filter(
+      e => emojiData[e].category === sub
+    );
 
-        // match texte + fallback emoji direct
-        return query.includes(search) || search.length === 0;
-    });
+    const filtered = list.filter(e =>
+      e.includes(search) ||
+      emojiData[e].query.toLowerCase().includes(search)
+    );
 
     return interaction.respond(
-        filtered.slice(0, 25).map(e => ({
-            name: `${e} — ${emojiData[e].query}`,
-            value: e,
-        }))
+      filtered.slice(0, 25).map(e => ({
+        name: `${e} — ${emojiData[e].query}`,
+        value: e,
+      }))
     );
-},
+  },
 
   /* =========================
      EXECUTE
@@ -186,10 +206,13 @@ module.exports = {
 
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
-    const emoji = interaction.options.getString("emoji");
+
+    const emojiRaw = interaction.options.getString("emoji");
+    const emoji = normalizeEmoji(emojiRaw);
+
     const target = interaction.options.getUser("target");
 
-    const data = emojiData[emoji];
+    const data = emojiDataNormalized[emoji];
 
     if (!data || data.category !== sub) {
       return interaction.reply({
