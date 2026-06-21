@@ -19,94 +19,39 @@ const fetch = (...args) =>
 const normalizeEmoji = (e) =>
   Array.from(String(e).normalize("NFC")).join("");
 
+
 /* =========================
-   EMOJI DATABASE COMPLETE
+   EMOJI DATABASE
 ========================= */
 
 const emojiData = {
-  /* ================= COMBAT ================= */
   "👊": { category: "combat", query: "punch", messages: ["{user} hits {target} 👊"] },
   "🤜": { category: "combat", query: "punch hit", messages: ["{user} strikes {target} 🤜"] },
   "🦶": { category: "combat", query: "kick fight", messages: ["{user} kicks {target} 🦶"] },
-  "🥊": { category: "combat", query: "boxing punch", messages: ["{user} boxes {target} 🥊"] },
-  "💥": { category: "combat", query: "explosion impact", messages: ["💥 {target} is blasted by {user}"] },
-  "⚔️": { category: "combat", query: "sword fight", messages: ["{user} challenges {target} ⚔️"] },
-  "🗡️": { category: "combat", query: "dagger attack", messages: ["{user} attacks {target} 🗡️"] },
-  "🏹": { category: "combat", query: "arrow shot", messages: ["{user} shoots an arrow at {target} 🏹"] },
-  "🪓": { category: "combat", query: "axe attack", messages: ["{user} strikes {target} with an axe 🪓"] },
-  "🔨": { category: "combat", query: "hammer smash", messages: ["{user} smashes {target} 🔨"] },
-  "🔫": { category: "combat", query: "gunshot cinematic action", messages: ["{user} opens fire on {target} 🔫"] },
 
-  /* ================= POWERS ================= */
   "🔥": { category: "powers", query: "fire blast", messages: ["{user} burns {target} 🔥"] },
-  "⚡": { category: "powers", query: "lightning strike", messages: ["{user} electrocutes {target} ⚡"] },
-  "❄️": { category: "powers", query: "ice attack", messages: ["{user} freezes {target} ❄️"] },
-  "🌪️": { category: "powers", query: "tornado power", messages: ["{user} summons a tornado on {target} 🌪️"] },
-  "🌊": { category: "powers", query: "water splash", messages: ["{user} splashes {target} 🌊"] },
-  "☄️": { category: "powers", query: "meteor strike", messages: ["{user} calls a meteor on {target} ☄️"] },
-  "✨": { category: "powers", query: "magic sparkles", messages: ["{user} enchants {target} ✨"] },
-  "💫": { category: "powers", query: "magic effect", messages: ["{user} dazzles {target} 💫"] },
-  "🔮": { category: "powers", query: "magic spell", messages: ["{user} casts a spell on {target} 🔮"] },
-  "🪄": { category: "powers", query: "wizard casting spell", messages: ["{user} uses magic on {target} 🪄"] },
+  "⚡": { category: "powers", query: "lightning strike", messages: ["{user} shocks {target} ⚡"] },
 
-  /* ================= REACTIONS ================= */
   "😂": { category: "reactions", query: "laughing reaction", messages: ["{user} laughs at {target} 😂"] },
-  "🤣": { category: "reactions", query: "rolling laugh", messages: ["{user} mocks {target} 🤣"] },
   "😭": { category: "reactions", query: "crying reaction", messages: ["{user} cries because of {target} 😭"] },
-  "😱": { category: "reactions", query: "shocked reaction", messages: ["{user} is shocked by {target} 😱"] },
-  "💀": { category: "reactions", query: "dead meme", messages: ["{user} destroys {target} 💀"] },
-  "😡": { category: "reactions", query: "angry reaction", messages: ["{user} is angry at {target} 😡"] },
-  "😈": { category: "reactions", query: "evil laugh", messages: ["{user} taunts {target} 😈"] },
-  "🤯": { category: "reactions", query: "mind blown", messages: ["{user} blows {target}'s mind 🤯"] },
-  "🙄": { category: "reactions", query: "eye roll reaction", messages: ["{user} ignores {target} 🙄"] },
-  "😴": { category: "reactions", query: "sleeping reaction", messages: ["{user} puts {target} to sleep 😴"] },
 
-  /* ================= AFFECTION ================= */
-  "🤗": { category: "affection", query: "anime hug", messages: ["{user} hugs {target} 🤗"] },
-  "😘": { category: "affection", query: "anime kiss", messages: ["{user} kisses {target} 😘"] },
-  "💋": { category: "affection", query: "blowing kiss", messages: ["{user} sends a kiss to {target} 💋"] },
-  "🥰": { category: "affection", query: "cute love anime", messages: ["{user} adores {target} 🥰"] },
-  "❤️": { category: "affection", query: "romantic hearts", messages: ["{user} loves {target} ❤️"] },
-  "💕": { category: "affection", query: "heart shower", messages: ["{user} showers {target} with love 💕"] },
-  "🫶": { category: "affection", query: "heart hands", messages: ["{user} shows affection to {target} 🫶"] },
-  "🌹": { category: "affection", query: "giving rose", messages: ["{user} gives a rose to {target} 🌹"] },
-  "💌": { category: "affection", query: "love letter", messages: ["{user} sends a love letter to {target} 💌"] },
+  "🤗": { category: "affection", query: "hug anime", messages: ["{user} hugs {target} 🤗"] },
+  "❤️": { category: "affection", query: "love hearts", messages: ["{user} loves {target} ❤️"] },
 
-  /* ================= SUGGESTIVE ================= */
   "😏": { category: "suggestive", query: "flirty wink", messages: ["{user} flirts with {target} 😏"] },
-  "😉": { category: "suggestive", query: "wink flirt", messages: ["{user} winks at {target} 😉"] },
-  "🫦": { category: "suggestive", query: "seductive look", messages: ["{user} teases {target} 🫦"] },
-  "🥵": { category: "suggestive", query: "hot reaction", messages: ["{user} makes {target} blush 🥵"] },
-  "😳": { category: "suggestive", query: "blushing anime", messages: ["{user} embarrasses {target} 😳"] },
-  "👀": { category: "suggestive", query: "flirty stare", messages: ["{user} looks at {target} 👀"] },
-  "🍑": { category: "suggestive", query: "peach suggestive", messages: ["{user} teases {target} 🍑"] },
-  "🍆": { category: "suggestive", query: "eggplant suggestive", messages: ["{user} teases {target} 🍆"] },
-  "💦": { category: "suggestive", query: "water splash reaction", messages: ["{user} splashes {target} 💦"] },
 
-  /* ================= TROLL ================= */
-  "🤡": { category: "troll", query: "clown reaction", messages: ["{user} calls {target} a clown 🤡"] },
-  "🍅": { category: "troll", query: "throw tomatoes", messages: ["{user} throws a tomato at {target} 🍅"] },
-  "🥚": { category: "troll", query: "egg throw", messages: ["{user} throws an egg at {target} 🥚"] },
-  "🪨": { category: "troll", query: "rock throw", messages: ["{user} throws a rock at {target} 🪨"] },
-  "🧻": { category: "troll", query: "toilet paper prank", messages: ["{user} wraps {target} in toilet paper 🧻"] },
-  "🍌": { category: "troll", query: "banana slip", messages: ["{user} makes {target} slip 🍌"] },
-  "🐟": { category: "troll", query: "fish slap", messages: ["{user} slaps {target} with a fish 🐟"] },
-  "👞": { category: "troll", query: "shoe throw", messages: ["{user} throws a shoe at {target} 👞"] },
-  "🦆": { category: "troll", query: "duck attack", messages: ["{user} sends a duck at {target} 🦆"] },
-  "🐸": { category: "troll", query: "pepe meme", messages: ["{user} trolls {target} 🐸"] },
-  "🗿": { category: "troll", query: "gigachad meme", messages: ["{user} crushes {target} 🗿"] },
+  "🤡": { category: "troll", query: "clown meme", messages: ["{user} calls {target} a clown 🤡"] },
 };
+
 
 /* =========================
    NORMALIZED MAP
 ========================= */
 
 const emojiDataNormalized = Object.fromEntries(
-  Object.entries(emojiData).map(([emoji, data]) => [
-    normalizeEmoji(emoji),
-    data,
-  ])
+  Object.entries(emojiData).map(([emoji, data]) => [normalizeEmoji(emoji), data])
 );
+
 
 /* =========================
    GIF FETCH
@@ -129,50 +74,42 @@ async function getGif(query) {
   }
 }
 
+
 /* =========================
-   COMMAND
+   COMMAND BUILDER
 ========================= */
+
+const buildSub = (name, desc) =>
+  (cmd) =>
+    cmd
+      .setName(name)
+      .setDescription(desc)
+      .addStringOption(o =>
+        o
+          .setName("emoji")
+          .setDescription("Choose an emoji")
+          .setRequired(true)
+          .setAutocomplete(true)
+      )
+      .addUserOption(o =>
+        o
+          .setName("target")
+          .setDescription("Target user")
+          .setRequired(true)
+      );
+
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("gif")
     .setDescription("Generate an interaction GIF based on an emoji")
 
-    .addSubcommand(cmd =>
-      cmd.setName("combat").setDescription("Combat GIF")
-        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
-        .addUserOption(o => o.setName("target").setRequired(true))
-    )
-
-    .addSubcommand(cmd =>
-      cmd.setName("powers").setDescription("Powers GIF")
-        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
-        .addUserOption(o => o.setName("target").setRequired(true))
-    )
-
-    .addSubcommand(cmd =>
-      cmd.setName("reactions").setDescription("Reactions GIF")
-        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
-        .addUserOption(o => o.setName("target").setRequired(true))
-    )
-
-    .addSubcommand(cmd =>
-      cmd.setName("affection").setDescription("Affection GIF")
-        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
-        .addUserOption(o => o.setName("target").setRequired(true))
-    )
-
-    .addSubcommand(cmd =>
-      cmd.setName("suggestive").setDescription("Suggestive GIF")
-        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
-        .addUserOption(o => o.setName("target").setRequired(true))
-    )
-
-    .addSubcommand(cmd =>
-      cmd.setName("troll").setDescription("Troll GIF")
-        .addStringOption(o => o.setName("emoji").setRequired(true).setAutocomplete(true))
-        .addUserOption(o => o.setName("target").setRequired(true))
-    ),
+    .addSubcommand(buildSub("combat", "Combat GIF"))
+    .addSubcommand(buildSub("powers", "Powers GIF"))
+    .addSubcommand(buildSub("reactions", "Reactions GIF"))
+    .addSubcommand(buildSub("affection", "Affection GIF"))
+    .addSubcommand(buildSub("suggestive", "Suggestive GIF"))
+    .addSubcommand(buildSub("troll", "Troll GIF")),
 
   /* =========================
      AUTOCOMPLETE
@@ -207,9 +144,7 @@ module.exports = {
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
 
-    const emojiRaw = interaction.options.getString("emoji");
-    const emoji = normalizeEmoji(emojiRaw);
-
+    const emoji = normalizeEmoji(interaction.options.getString("emoji"));
     const target = interaction.options.getUser("target");
 
     const data = emojiDataNormalized[emoji];
