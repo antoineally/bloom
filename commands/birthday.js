@@ -18,9 +18,9 @@ async function getBirthdayGif() {
         'https://media.tenor.com/KHS0iDoJb0QAAAAd/squid-game-squidgame.gif',
         'https://media.tenor.com/fFCZieAsZ0kAAAAC/spongebob-patrick.gif',
         'https://media.tenor.com/X15e67QrANUAAAAC/the-office.gif',
-        'https://media.tenor.com/F355L9Gs16oAAAAm/pengu-pudgy.webp',
+        'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExeG12cWU3eHg3enFiZ2h6amc3dG1yemhtNXNiejB6dDFuODE4b3VjYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WAwZc6UMR0VTweUaZI/giphy.gif',
         'https://media.tenor.com/AQ9qE0RCCQ4AAAAC/band-marching.gif',
-        'https://media.tenor.com/-kx4msGXmN8AAAP1/happy-dance.mp4'
+'https://cdn.discordapp.com/emojis/1516793816777232416.gif?size=128&quality=lossless'
     ];
 
     return gifs[Math.floor(Math.random() * gifs.length)];
