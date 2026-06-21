@@ -3,46 +3,48 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Show all bot commands'),
+        .setDescription('📚 Show all bot commands'),
 
     async execute(interaction) {
-
         const space = '\u200B';
 
         const embed = new EmbedBuilder()
             .setColor(0x00B0FF)
             .setTitle('📚 Help Menu')
-            .setDescription(
-                'Here is the list of available commands:' +
-                `\n${space}\n`
-            )
+            .setDescription(`${space}\n`)
             .addFields(
                 {
                     name: '⚙️ Utilities',
                     value:
-                        '• /serverinfo — Displays information about the server.\n' +
-                        '• /userinfo — Displays information about a user.\n' +
-                        '• /clear (Admin only) — Deletes recent messages.\n' +
-                        `\n${space}\n`
+                        '• `/serverinfo` — Show server information\n' +
+                        '• `/userinfo` — Show detailed user information\n' +
+                        '• `/clear` — Delete messages (admins)\n' +
+                        `${space}\n${space}\n`
                 },
                 {
                     name: '🎮 Fun',
                     value:
-                        '• /joke — Random joke.\n' +
-                        '• /use — Emoji + GIF.\n' +
-                        '• /nickname — Generates nickname.\n' +
-                        `\n${space}\n`
+                        '• `/joke` — Get a random joke\n' +
+                        '• `/nickname` — Generate a random nickname\n\n' +
+
+                        '• `/gif combat` — Generate a combat GIF (👊 🤜 🦶 🥊 💥 ⚔️ 🗡️ 🏹 🪓 🔨 🔫)\n' +
+                        '• `/gif powers` — Generate a powers GIF (🔥 ⚡ ❄️ 🌪️ 🌊 ☄️ ✨ 💫 🔮 🪄)\n' +
+                        '• `/gif reactions` — Generate a reactions GIF (😂 🤣 😭 😱 💀 😡 😈 🤯 🙄 😴)\n' +
+                        '• `/gif affection` — Generate an affection GIF (🤗 😘 💋 🥰 ❤️ 💕 🫶 🌹 💌)\n' +
+                        '• `/gif suggestive` — Generate a suggestive GIF (😏 😉 🫦 🥵 😳 👀 🍑 🍆 💦)\n' +
+                        '• `/gif troll` — Generate a troll GIF (🤡 🍅 🥚 🪨 🧻 🍌 🐟 👞 🦆 🐸 🗿)\n' +
+                        `${space}\n${space}\n`
                 },
                 {
                     name: '🎂 Birthdays',
                     value:
-                        '• /birthday set\n' +
-                        '• /birthday remove\n' +
-                        '• /birthday check\n' +
-                        '• /birthday list'
+                        '• `/birthday set` — Set your birthday\n' +
+                        '• `/birthday remove` — Remove your birthday\n' +
+                        '• `/birthday check` — Check a birthday\n' +
+                        '• `/birthday list` — Show upcoming and recent birthdays'
                 }
             );
 
-        await interaction.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
     }
 };
