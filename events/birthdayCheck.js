@@ -1,5 +1,5 @@
 const { Events, EmbedBuilder } = require('discord.js');
-const Database = require('better-sqlite3');
+const fs = require('fs');
 const path = require('path');
 const cron = require('node-cron');
 
@@ -8,23 +8,53 @@ module.exports = {
     once: true,
 
     async execute(client) {
-        console.log('🎂 Birthday system loaded (CRON MODE)');
+        console.log('🎂 Birthday system loaded (JSON MODE)');
 
-        const db = new Database(path.join(__dirname, '../data/birthdays.db'));
+        const DB_PATH = path.join(__dirname, '../data/birthdays.json');
 
-        db.prepare(`
-            CREATE TABLE IF NOT EXISTS birthdays (
-                userId TEXT PRIMARY KEY,
-                date TEXT NOT NULL
-            )
-        `).run();
+        /* ================= LOAD JSON ================= */
+        function loadDB() {
+            try {
+                if (!fs.existsSync(DB_PATH)) return {};
+                return JSON.parse(fs.readFileSync(DB_PATH, 'utf8') || '{}');
+            } catch (err) {
+                console.error('DB load error:', err);
+                return {};
+            }
+        }
 
-        // table anti-doublon (restart safe)
-        db.prepare(`
-            CREATE TABLE IF NOT EXISTS birthday_logs (
-                date TEXT PRIMARY KEY
-            )
-        `).run();
+        /* ================= SAVE JSON ================= */
+        function saveDB(data) {
+            try {
+                const tmp = DB_PATH + '.tmp';
+                fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+                fs.renameSync(tmp, DB_PATH);
+            } catch (err) {
+                console.error('DB save error:', err);
+            }
+        }
+
+        /* ================= LOGS FILE ================= */
+        const LOG_PATH = path.join(__dirname, '../data/birthday_logs.json');
+
+        function loadLogs() {
+            try {
+                if (!fs.existsSync(LOG_PATH)) return {};
+                return JSON.parse(fs.readFileSync(LOG_PATH, 'utf8') || '{}');
+            } catch {
+                return {};
+            }
+        }
+
+        function saveLogs(data) {
+            try {
+                const tmp = LOG_PATH + '.tmp';
+                fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+                fs.renameSync(tmp, LOG_PATH);
+            } catch (err) {
+                console.error('Logs error:', err);
+            }
+        }
 
         const birthdayGifs = [
             'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2NlMGFkNDJ2a2Frb21oNmZreWRwYmgzMnFqMWs3NHZvbzR2NmppeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yoJC2GnSClbPOkV0eA/giphy.gif',
@@ -33,15 +63,18 @@ module.exports = {
         ];
 
         const birthdayMessages = [
-            userId => `🎂 Today we celebrate <@${userId}>!`,
-            userId => `🥳 Happy Birthday <@${userId}>!`,
-            userId => `🎉 Wishing a great day to <@${userId}>!`
+            id => `🎂 Today we celebrate <@${id}>!`,
+            id => `🥳 Happy Birthday <@${id}>!`,
+            id => `🎉 Wishing a great day to <@${id}>!`
         ];
 
-        // CRON: tous les jours à 09:00 Montréal
+        /* ================= CRON ================= */
         cron.schedule('0 9 * * *', async () => {
             try {
                 console.log('🎂 CRON triggered (09:00 Montreal)');
+
+                const db = loadDB();
+                const logs = loadLogs();
 
                 const now = new Date();
 
@@ -54,21 +87,17 @@ module.exports = {
                 const [month, day] = formatter.format(now).split('/');
                 const today = `${month}-${day}`;
 
-                // 🔥 anti restart / anti double envoi (DB)
-                const alreadySent = db.prepare(`
-                    SELECT date FROM birthday_logs WHERE date = ?
-                `).get(today);
-
-                if (alreadySent) {
+                /* anti double send */
+                if (logs[today]) {
                     console.log(`⚠️ Already sent for ${today}`);
                     return;
                 }
 
-                const rows = db.prepare(`
-                    SELECT userId FROM birthdays WHERE date = ?
-                `).all(today);
+                const users = Object.entries(db)
+                    .filter(([_, data]) => data?.date === today)
+                    .map(([userId]) => userId);
 
-                console.log(`🎂 Found ${rows.length} birthdays for ${today}`);
+                console.log(`🎂 Found ${users.length} birthdays for ${today}`);
 
                 const guild = client.guilds.cache.first();
                 if (!guild) return console.error('❌ No guild found');
@@ -79,17 +108,15 @@ module.exports = {
 
                 if (!channel) return console.error('❌ Missing channel ID');
 
-                if (!rows.length) {
-                    db.prepare(`
-                        INSERT OR IGNORE INTO birthday_logs (date)
-                        VALUES (?)
-                    `).run(today);
+                if (!users.length) {
+                    logs[today] = true;
+                    saveLogs(logs);
                     return;
                 }
 
-                for (const row of rows) {
+                for (const userId of users) {
                     try {
-                        const member = await guild.members.fetch(row.userId).catch(() => null);
+                        const member = await guild.members.fetch(userId).catch(() => null);
                         if (!member) continue;
 
                         const embed = new EmbedBuilder()
@@ -98,7 +125,7 @@ module.exports = {
                             .setDescription(
                                 birthdayMessages[
                                     Math.floor(Math.random() * birthdayMessages.length)
-                                ](row.userId)
+                                ](userId)
                             )
                             .setThumbnail(member.user.displayAvatarURL())
                             .setImage(
@@ -121,11 +148,8 @@ module.exports = {
                     }
                 }
 
-                // marque comme envoyé (restart safe)
-                db.prepare(`
-                    INSERT OR IGNORE INTO birthday_logs (date)
-                    VALUES (?)
-                `).run(today);
+                logs[today] = true;
+                saveLogs(logs);
 
             } catch (err) {
                 console.error('❌ CRON error:', err);

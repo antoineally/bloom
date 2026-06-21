@@ -126,60 +126,63 @@ module.exports = {
         }
 
         /* ================= LIST ================= */
-        if (sub === 'list') {
-            const data = loadBirthdays();
-            const entries = Object.entries(data);
+       if (sub === 'list') {
+    const data = loadBirthdays();
+    const entries = Object.entries(data);
 
-            if (!entries.length) {
-                return interaction.editReply('❌ No birthdays found');
+    if (!entries.length) {
+        return interaction.editReply('❌ No birthdays found');
+    }
+
+    const now = new Date();
+    const year = now.getFullYear();
+
+    const sorted = entries
+        .map(([id, data]) => {
+            // ✅ SAFETY CHECK (FIX CRASH)
+            if (!data || !data.date) return null;
+
+            const [m, d] = data.date.split('-').map(Number);
+
+            let next = new Date(year, m - 1, d);
+
+            if (next < now) {
+                next = new Date(year + 1, m - 1, d);
             }
 
-            const now = new Date();
-            const year = now.getFullYear();
+            const diff = (next - now) / 86400000;
 
-            const sorted = entries
-                .map(([id, data]) => {
-                    const [m, d] = data.date.split('-').map(Number);
+            return { id, date: data.date, diff };
+        })
+        .filter(Boolean) // ✅ remove null values
+        .filter(x => x.diff >= -7 && x.diff <= 90)
+        .sort((a, b) => a.diff - b.diff);
 
-                    let next = new Date(year, m - 1, d);
+    if (!sorted.length) {
+        return interaction.editReply('❌ No birthdays in range');
+    }
 
-                    if (next < now) {
-                        next = new Date(year + 1, m - 1, d);
-                    }
+    const list = await Promise.all(
+        sorted.map(async x => {
+            const member = await interaction.guild.members
+                .fetch(x.id)
+                .catch(() => null);
 
-                    const diff = (next - now) / 86400000;
+            const name = member ? member.toString() : `Unknown (${x.id})`;
 
-                    return { id, date: data.date, diff };
-                })
-                .filter(x => x.diff >= -7 && x.diff <= 90)
-                .sort((a, b) => a.diff - b.diff);
+            return `🎂 ${name} → **${formatDate(x.date)}** (in ${Math.ceil(x.diff)} days)`;
+        })
+    );
 
-            if (!sorted.length) {
-                return interaction.editReply('❌ No birthdays in range');
-            }
+    const embed = new EmbedBuilder()
+        .setColor(0x7C3AED)
+        .setTitle('🎉 Birthday Calendar')
+        .setDescription(`📅 Upcoming birthdays\n\n${list.join('\n')}`)
+        .setFooter({ text: 'Use /birthday set to register yours' })
+        .setImage(await getBirthdayGif());
 
-            const list = await Promise.all(
-                sorted.map(async x => {
-                    const member = await interaction.guild.members
-                        .fetch(x.id)
-                        .catch(() => null);
-
-                    const name = member ? member.toString() : `Unknown (${x.id})`;
-
-                    return `🎂 ${name} → **${formatDate(x.date)}** (in ${Math.ceil(x.diff)} days)`;
-                })
-            );
-
-            const embed = new EmbedBuilder()
-                .setColor(0x7C3AED)
-                .setTitle('🎉 Birthday Calendar')
-                .setDescription(`📅 Upcoming birthdays\n\n${list.join('\n')}`)
-                .setFooter({ text: 'Use /birthday set to register yours' })
-                .setImage(await getBirthdayGif());
-
-            return interaction.editReply({ embeds: [embed] });
-        }
-
+    return interaction.editReply({ embeds: [embed] });
+}
         /* ================= REMOVE ================= */
         if (sub === 'remove') {
             const targetUser = interaction.options.getUser('user');
