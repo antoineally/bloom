@@ -16,7 +16,7 @@ function loadBirthdays() {
   }
 }
 
-/* ================= SAVE (SAFE) ================= */
+/* ================= SAVE ================= */
 function saveBirthdays(data) {
   try {
     const tmpPath = DB_PATH + ".tmp";
@@ -46,9 +46,21 @@ function getBirthday(userId) {
   return db[userId] || null;
 }
 
+/* ================= OPTIONAL DELETE ================= */
+function deleteBirthday(userId) {
+  const db = loadBirthdays();
+
+  if (!db[userId]) return false;
+
+  delete db[userId];
+  saveBirthdays(db);
+  return true;
+}
+
 module.exports = {
   loadBirthdays,
   saveBirthdays,
   addBirthday,
   getBirthday,
+  deleteBirthday,
 };

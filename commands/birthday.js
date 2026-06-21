@@ -5,13 +5,13 @@ const {
 } = require('discord.js');
 
 const {
-    load,
-    setBirthday,
-    removeBirthday,
-    getBirthday
+    loadBirthdays,
+    addBirthday,
+    getBirthday,
+    removeBirthday
 } = require('../utils/birthdays');
 
-// 🎲 Random GIF
+// 🎲 GIF random
 async function getBirthdayGif() {
     const gifs = [
         'https://media.tenor.com/QtzWzR4RphAAAAAC/blues-brothers.gif',
@@ -26,7 +26,7 @@ async function getBirthdayGif() {
     return gifs[Math.floor(Math.random() * gifs.length)];
 }
 
-// MM-DD → "January 05"
+// 📅 format MM-DD → "January 05"
 function formatDate(mmdd) {
     const [m, d] = mmdd.split('-').map(Number);
     const date = new Date(2000, m - 1, d);
@@ -37,6 +37,7 @@ function formatDate(mmdd) {
     });
 }
 
+// 📅 validate date
 function isValidDate(mmdd) {
     const [m, d] = mmdd.split('-').map(Number);
     const date = new Date(2000, m - 1, d);
@@ -54,7 +55,7 @@ module.exports = {
                 .setDescription('Set a birthday (MM-DD)')
                 .addStringOption(o =>
                     o.setName('date')
-                        .setDescription('MM-DD')
+                        .setDescription('Format MM-DD')
                         .setRequired(true)
                 )
                 .addUserOption(o =>
@@ -91,9 +92,7 @@ module.exports = {
 
         const sub = interaction.options.getSubcommand();
 
-        // =====================
-        // SET
-        // =====================
+        /* ================= SET ================= */
         if (sub === 'set') {
             let date = interaction.options.getString('date');
             const targetUser = interaction.options.getUser('user');
@@ -119,18 +118,16 @@ module.exports = {
 
             const user = targetUser || interaction.user;
 
-            setBirthday(user.id, date);
+            addBirthday(user.id, date);
 
             return interaction.editReply(
                 `🎉 Birthday saved for **${user}** → **${formatDate(date)}**`
             );
         }
 
-        // =====================
-        // LIST
-        // =====================
+        /* ================= LIST ================= */
         if (sub === 'list') {
-            const data = load();
+            const data = loadBirthdays();
             const entries = Object.entries(data);
 
             if (!entries.length) {
@@ -141,8 +138,8 @@ module.exports = {
             const year = now.getFullYear();
 
             const sorted = entries
-                .map(([id, date]) => {
-                    const [m, d] = date.split('-').map(Number);
+                .map(([id, data]) => {
+                    const [m, d] = data.date.split('-').map(Number);
 
                     let next = new Date(year, m - 1, d);
 
@@ -152,7 +149,7 @@ module.exports = {
 
                     const diff = (next - now) / 86400000;
 
-                    return { id, date, diff };
+                    return { id, date: data.date, diff };
                 })
                 .filter(x => x.diff >= -7 && x.diff <= 90)
                 .sort((a, b) => a.diff - b.diff);
@@ -167,9 +164,7 @@ module.exports = {
                         .fetch(x.id)
                         .catch(() => null);
 
-                    const name = member
-                        ? member.toString()
-                        : `Unknown User (${x.id})`;
+                    const name = member ? member.toString() : `Unknown (${x.id})`;
 
                     return `🎂 ${name} → **${formatDate(x.date)}** (in ${Math.ceil(x.diff)} days)`;
                 })
@@ -178,24 +173,17 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setColor(0x7C3AED)
                 .setTitle('🎉 Birthday Calendar')
-                .setDescription(
-                    `**📅 Upcoming & recent birthdays**\n\n${list.join('\n')}`
-                )
-                .setFooter({
-                    text: '✨ Use /birthday set to register yours'
-                })
+                .setDescription(`📅 Upcoming birthdays\n\n${list.join('\n')}`)
+                .setFooter({ text: 'Use /birthday set to register yours' })
                 .setImage(await getBirthdayGif());
 
-            return interaction.editReply({
-                embeds: [embed]
-            });
+            return interaction.editReply({ embeds: [embed] });
         }
 
-        // =====================
-        // REMOVE
-        // =====================
+        /* ================= REMOVE ================= */
         if (sub === 'remove') {
             const targetUser = interaction.options.getUser('user');
+
             const isAdmin = interaction.member.permissions.has(
                 PermissionFlagsBits.ManageGuild
             );
@@ -214,14 +202,10 @@ module.exports = {
 
             removeBirthday(user.id);
 
-            return interaction.editReply(
-                `🗑️ Birthday removed for **${user}**`
-            );
+            return interaction.editReply(`🗑️ Birthday removed for **${user}**`);
         }
 
-        // =====================
-        // CHECK
-        // =====================
+        /* ================= CHECK ================= */
         if (sub === 'check') {
             const user = interaction.options.getUser('user') || interaction.user;
 
