@@ -178,7 +178,7 @@ module.exports = {
             value: e,
         }))
     );
-}
+},
 
   /* =========================
      EXECUTE
