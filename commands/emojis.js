@@ -159,19 +159,26 @@ module.exports = {
     const focused = interaction.options.getFocused(true);
     const sub = interaction.options.getSubcommand();
 
-    const list = Object.keys(emojiData).filter(e => emojiData[e].category === sub);
+    const list = Object.keys(emojiData).filter(
+        e => emojiData[e].category === sub
+    );
 
-    const filtered = list
-      .filter(e =>
-        e.includes(focused.value) ||
-        emojiData[e].query.toLowerCase().includes(focused.value.toLowerCase())
-      )
-      .slice(0, 25);
+    const search = (focused.value || "").toLowerCase();
+
+    const filtered = list.filter(e => {
+        const query = (emojiData[e].query || "").toLowerCase();
+
+        // match texte + fallback emoji direct
+        return query.includes(search) || search.length === 0;
+    });
 
     return interaction.respond(
-      filtered.map(e => ({ name: e, value: e }))
+        filtered.slice(0, 25).map(e => ({
+            name: `${e} — ${emojiData[e].query}`,
+            value: e,
+        }))
     );
-  },
+}
 
   /* =========================
      EXECUTE
