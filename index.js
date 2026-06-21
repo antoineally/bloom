@@ -130,6 +130,24 @@ client.once('ready', async () => {
 ========================= */
 
 client.on('interactionCreate', async interaction => {
+    /* =========================
+       AUTOCOMPLETE
+    ========================= */
+    if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command || !command.autocomplete) return;
+
+        try {
+            await command.autocomplete(interaction);
+        } catch (err) {
+            console.error("Autocomplete error:", err);
+        }
+        return;
+    }
+
+    /* =========================
+       COMMANDS SLASH
+    ========================= */
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
