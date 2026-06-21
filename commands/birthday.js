@@ -14,7 +14,7 @@ const {
 // 🎲 GIF random
 async function getBirthdayGif() {
     const gifs = [
-        'https://media.tenor.com/QtzWzR4RphAAAAAC/blues-brothers.gif',
+          'https://media.tenor.com/QtzWzR4RphAAAAAC/blues-brothers.gif',
         'https://media.tenor.com/KHS0iDoJb0QAAAAd/squid-game-squidgame.gif',
         'https://media.tenor.com/fFCZieAsZ0kAAAAC/spongebob-patrick.gif',
         'https://media.tenor.com/X15e67QrANUAAAAC/the-office.gif',
