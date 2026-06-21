@@ -8,7 +8,12 @@ const {
     Routes
 } = require('discord.js');
 
+const mysql = require('mysql2/promise');
 require('dotenv').config();
+
+/* =========================
+   CLIENT DISCORD
+========================= */
 
 const client = new Client({
     intents: [
@@ -23,16 +28,20 @@ client.commands = new Collection();
 const commands = [];
 
 /* =========================
-   CHARGEMENT DES COMMANDES
+   MYSQL (GLOBAL)
+========================= */
+
+let db;
+
+/* =========================
+   CHARGEMENT COMMANDES
 ========================= */
 
 const commandsPath = path.join(__dirname, 'commands');
 
 console.log('📂 Dossier des commandes :', commandsPath);
 
-if (!fs.existsSync(commandsPath)) {
-    console.error('❌ Le dossier "commands" est introuvable.');
-} else {
+if (fs.existsSync(commandsPath)) {
     const commandFiles = fs.readdirSync(commandsPath)
         .filter(file => file.endsWith('.js'));
 
@@ -59,7 +68,7 @@ if (!fs.existsSync(commandsPath)) {
 }
 
 /* =========================
-   CHARGEMENT DES ÉVÉNEMENTS
+   CHARGEMENT EVENTS
 ========================= */
 
 const eventsPath = path.join(__dirname, 'events');
@@ -80,12 +89,29 @@ if (fs.existsSync(eventsPath)) {
 }
 
 /* =========================
-   READY + DÉPLOIEMENT
+   READY
 ========================= */
 
 client.once('ready', async () => {
     console.log(`🤖 Connecté en tant que ${client.user.tag}`);
 
+    /* 🔥 MYSQL CONNECTION */
+    try {
+        db = await mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "password",
+            database: "test"
+        });
+
+        global.db = db;
+
+        console.log("✅ Connecté à MySQL");
+    } catch (err) {
+        console.error("❌ Erreur MySQL :", err);
+    }
+
+    /* 🚀 DEPLOY COMMANDS */
     try {
         const rest = new REST({ version: '10' })
             .setToken(process.env.TOKEN);
@@ -134,7 +160,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 /* =========================
-   CONNEXION
+   LOGIN
 ========================= */
 
 client.login(process.env.TOKEN);
