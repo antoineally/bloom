@@ -154,12 +154,12 @@ module.exports = {
     .setName("gif")
     .setDescription("Generate an interaction GIF based on an emoji")
 
-    .addSubcommand(buildSub("combat", "Combat GIF"))
-    .addSubcommand(buildSub("powers", "Powers GIF"))
-    .addSubcommand(buildSub("reactions", "Reactions GIF"))
-    .addSubcommand(buildSub("affection", "Affection GIF"))
-    .addSubcommand(buildSub("suggestive", "Suggestive GIF"))
-    .addSubcommand(buildSub("troll", "Troll GIF")),
+    .addSubcommand(buildSub("combat", "Generate a random fighting GIF 👊 targeting a user"))
+.addSubcommand(buildSub("powers", "Generate a random power GIF 💥 targeting a user"))
+.addSubcommand(buildSub("reactions", "Generate a random reaction GIF 😂 targeting a user"))
+.addSubcommand(buildSub("affection", "Generate a random affectionate GIF ❤️ targeting a user"))
+.addSubcommand(buildSub("suggestive", "Generate a random suggestive GIF 🔥 targeting a user"))
+.addSubcommand(buildSub("troll", "Generate a random troll GIF 😏 targeting a user")),
 
   async autocomplete(interaction) {
     const focused = interaction.options.getFocused(true);
