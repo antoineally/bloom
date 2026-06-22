@@ -58,7 +58,7 @@ module.exports = {
 
         const birthdayGifs = [
             'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2NlMGFkNDJ2a2Frb21oNmZreWRwYmgzMnFqMWs3NHZvbzR2NmppeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/yoJC2GnSClbPOkV0eA/giphy.gif',
-            'https://media.tenor.com/wCo1AiSrB10AAAAm/pengu-pudgy.webp',
+            'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDVyYTY3aTd2MWJrbjdvcXVvZTZpNThncXdiZHJjNXpueTBkYjRvcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/v0uvKMF0GoJGLjDcrg/giphy.gif',
             'https://media.tenor.com/Kalf1rXmrxIAAAAm/happy-birthday.webp'
         ];
 
