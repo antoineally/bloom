@@ -76,17 +76,4 @@ module.exports = {
 
         await interaction.reply({ embeds: [embed] });
     }
-};                        .sort((a, b) => b.position - a.position)
-                        .map(role => role.toString())
-                        .join(' ') || 'None',
-                    inline: false
-                }
-            )
-
-            .setFooter({
-                text: `🆔 ${member.id}`,
-            });
-
-        await interaction.reply({ embeds: [embed] });
-    }
 };
