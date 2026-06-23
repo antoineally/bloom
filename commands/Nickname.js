@@ -1,46 +1,55 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const store = require('../utils/nicknameStore');
 
-const prefixes = [
-  'Expired', 'Crusty', 'Deep-Fried', 'Greasy', 'Damp',
-  'Forbidden', 'Suspiciously Damp', 'Unwashed', 'Sticky'
-];
-
-const nouns = [
-  'Armpit', 'Butt Cheek', 'Lint Ball', 'Toe Bean',
-  'Sock Goblin', 'Pocket Crumb', 'Knee Gremlin'
-];
-
-const suffixes = [
-  'of Questionable Moisture', 'Supreme', 'the Unwashed',
-  'from the Couch Crease', 'of Mild Concern'
-];
-
-function random(arr) {
-  if (!arr.length) {
-    throw new Error('Array is empty');
-  }
-
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+/* =========================
+   RANDOM NICKNAME GENERATOR
+========================= */
 
 function generateNick() {
-  const type = Math.random();
+  const adjectives = [
+    'Moldy','Wet','Suspicious','Broken','Expired','Greasy','Crusty',
+    'Feral','Forgotten','Leaky','Rotting','Stained','Busted',
+    'Unwashed','Questionable','Offbrand','Glitched','Bugged'
+  ];
 
-  if (type < 0.33) {
-    return `${random(prefixes)} ${random(nouns)}`;
-  }
+  const nouns = [
+    'Sock','Chair','Banana','Toilet','Couch','Remote','Keyboard',
+    'Spaghetti','Dustpile','Dumpster','Fridge','Microwave',
+    'Lawnchair','RubberDuck','Trashbag','WetWipe'
+  ];
 
-  if (type < 0.66) {
-    return `${random(nouns)} ${random(suffixes)}`;
-  }
+  const complements = [
+    'basement','no wifi','bad decisions','low battery','on trial',
+    'lost cause','no refunds','broken dreams','budget edition',
+    'expired','unsupported','out of service'
+  ];
 
-  return `${random(prefixes)} ${random(nouns)} ${random(suffixes)}`;
+  const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const patterns = [
+    () => `${random(adjectives)} ${random(nouns)}`,
+    () => `${random(nouns)} ${random(complements)}`,
+    () => `${random(adjectives)} ${random(nouns)} ${random(complements)}`,
+    () => `${random(nouns)}_${random(adjectives)}`
+  ];
+
+  let name = random(patterns)();
+
+  // hard enforce Discord limit
+  name = name.slice(0, 32);
+
+  // avoid empty edge case
+  return name || "Broken Account";
 }
+
+/* =========================
+   COMMAND
+========================= */
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('nickname')
-    .setDescription('📛 Set a cursed nickname')
+    .setDescription('📛 Assign a funny temporary nickname (8h)')
     .addUserOption(opt =>
       opt.setName('user')
         .setDescription('Target user')
@@ -48,80 +57,82 @@ module.exports = {
     )
     .addStringOption(opt =>
       opt.setName('name')
-        .setDescription('Preferred nickname (optional). Leave blank to generate a random cursed nickname.')
+        .setDescription('Custom nickname (optional)')
         .setRequired(false)
     ),
 
   async execute(interaction) {
+    const brand = "Bʟᴏᴏᴍ Assɪsᴛᴀɴᴛ 🌸";
+
     const user = interaction.options.getUser('user');
-    const member = await interaction.guild.members.fetch(user.id);
-
-    let name = interaction.options.getString('name');
-
-    const isMod = interaction.member.permissions.has(
-      PermissionFlagsBits.ManageNicknames
-    );
-
-    if (!isMod) {
-      return interaction.reply({
-        content: '❌ You do not have permission to use this command.',
-        ephemeral: true
-      });
-    }
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+    const botMember = interaction.guild.members.me;
 
     if (!member) {
       return interaction.reply({
-        content: '❌ User not found.',
-        ephemeral: true
+        content: `${brand}\n❌ User not found.`,
+        flags: 64
       });
     }
 
-    if (!name) {
-      name = generateNick();
+    if (!botMember.permissions.has(PermissionFlagsBits.ManageNicknames)) {
+      return interaction.reply({
+        content: `${brand}\n❌ Missing Manage Nicknames permission.`,
+        flags: 64
+      });
     }
 
-    if (name.length > 32) {
-      name = name.slice(0, 32);
+    if (member.roles.highest.position >= botMember.roles.highest.position) {
+      return interaction.reply({
+        content: `${brand}\n❌ Role hierarchy prevents nickname change.`,
+        flags: 64
+      });
     }
 
-    const oldNick = member.nickname;
+    /* =========================
+       🧠 FIX: ORIGINAL ONLY ONCE
+    ========================= */
+
+    const db = store.load();
+
+    const originalNick =
+      db[member.id]?.originalNick ?? member.displayName;
+
+    /* =========================
+       NEW NAME
+    ========================= */
+
+    let name = interaction.options.getString('name') || generateNick();
+    if (name.length > 32) name = name.slice(0, 32);
 
     try {
       await member.setNickname(name);
 
-      // Public anonymous message
+      /* save ONLY FIRST original */
+      store.set(member.id, {
+        guildId: interaction.guild.id,
+        originalNick,
+        expireAt: Date.now() + 8 * 60 * 60 * 1000
+      });
+
+      /* 🌍 PUBLIC MESSAGE */
       await interaction.channel.send({
         content: `📛 ${member} has been given a new nickname`
       });
 
-      // Private confirmation
-      await interaction.reply({
-        content: '✅ Nickname updated.',
-        ephemeral: true
+      /* 🔒 PRIVATE MESSAGE */
+      return interaction.reply({
+        content: `${brand}\n✅ Nickname updated successfully.`,
+        flags: 64
       });
-
-      // Auto reset after 8 hours
-      setTimeout(async () => {
-        try {
-          await member.setNickname(oldNick ?? null);
-        } catch (err) {
-          console.error('Reset nickname failed:', err);
-        }
-      }, 8 * 60 * 60 * 1000);
 
     } catch (err) {
       console.error(err);
 
-      if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({
-          content: '❌ Failed to change nickname.'
-        });
-      } else {
-        await interaction.reply({
-          content: '❌ Failed to change nickname.',
-          ephemeral: true
-        });
-      }
+      return interaction.reply({
+        content: `${brand}\n❌ Failed to update nickname.`,
+        flags: 64
+      });
     }
   }
 };

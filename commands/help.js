@@ -11,7 +11,9 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(0x00B0FF)
             .setTitle('📚 Help Menu')
-            .setDescription(`${space}\n`)
+            .setDescription(
+                `${space}\n`
+            )
             .addFields(
                 {
                     name: '⚙️ Utilities',
@@ -19,21 +21,22 @@ module.exports = {
                         '• `/serverinfo` — Show server information\n' +
                         '• `/userinfo` — Show detailed user information\n' +
                         '• `/clear` — Delete messages (admins)\n' +
-                        `${space}\n${space}\n`
+                        `${space}\n` + `${space}\n`
                 },
                 {
                     name: '🎮 Fun',
                     value:
-                        '• `/joke` — Get a random joke\n' +
-                        '• `/nickname` — Generate a random nickname\n\n' +
-
-                        '• `/gif combat` — Generate a combat GIF (👊 🤜 🦶 🥊 💥 ⚔️ 🗡️ 🏹 🪓 🔨 🔫)\n' +
-                        '• `/gif powers` — Generate a powers GIF (🔥 ⚡ ❄️ 🌪️ 🌊 ☄️ ✨ 💫 🔮 🪄)\n' +
-                        '• `/gif reactions` — Generate a reactions GIF (😂 🤣 😭 😱 💀 😡 😈 🤯 🙄 😴)\n' +
-                        '• `/gif affection` — Generate an affection GIF (🤗 😘 💋 🥰 ❤️ 💕 🫶 🌹 💌)\n' +
-                        '• `/gif suggestive` — Generate a suggestive GIF (😏 😉 🫦 🥵 😳 👀 🍑 🍆 💦)\n' +
-                        '• `/gif troll` — Generate a troll GIF (🤡 🍅 🥚 🪨 🧻 🍌 🐟 👞 🦆 🐸 🗿)\n' +
-                        `${space}\n${space}\n`
+                        '• `/joke` — Generate a random joke\n' +
+                        '• `/nickname` — Set an anonymous funny nickname\n\n' +
+                        '• `/gif global` — Generate a random emoji-based GIF\n' +
+                        '• `/gif reactions` — Generate GIFs based on reaction emojis 😂 😭 😱 😡 🙄 😴 🤡\n' +
+                        '• `/gif affection` — Generate GIFs based on affection emojis 🤗 😘 ❤️ 🌹\n' +
+                        '• `/gif social` — Generate GIFs based on social interaction emojis 👋 👏 🙏 🤝 💪 🍀 🏆 🍻 🎂 🎉\n' +
+                        '• `/gif suggestive` — Generate GIFs based on suggestive emojis 😏 😉 🫦 🥵 😳 👀 🍆 💦\n' +
+                        '• `/gif troll` — Generate GIFs based on troll/chaos emojis 🍅 🥚 🪨 🧻 🍌 👞\n' +
+                        '• `/gif combat` — Generate GIFs based on combat emojis 👊 🦶 ⚔️ 🔫\n' +
+                        '• `/gif powers` — Generate GIFs based on power emojis 🔥 ⚡ ❄️ 🌪️ 🌊 🪄\n' +
+                        `${space}`
                 },
                 {
                     name: '🎂 Birthdays',
