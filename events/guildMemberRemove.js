@@ -11,7 +11,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(0xEF4444)
             .setTitle('🚪 Member Left')
-            .setDescription(`${member} has left the server.`)
+            .setDescription(`${member.displayName} has left the server.`)
             .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
 
         await channel.send({ embeds: [embed] });
