@@ -4,49 +4,70 @@ const path = require('path');
 const FILE = path.join(__dirname, '../data/nicknames.json');
 
 /* =========================
-   SAFE LOAD (NO CRASH)
+   MEMORY DB
+========================= */
+let db = load();
+
+/* =========================
+   LOAD FROM FILE
 ========================= */
 function load() {
-  try {
-    if (!fs.existsSync(FILE)) return {};
+    try {
+        if (!fs.existsSync(FILE)) return {};
 
-    const data = fs.readFileSync(FILE, 'utf8');
+        const data = fs.readFileSync(FILE, 'utf8');
 
-    if (!data || data.trim() === '') return {};
+        if (!data || data.trim() === '') return {};
 
-    return JSON.parse(data);
-
-  } catch (err) {
-    console.error("⚠️ JSON corrupted → resetting file");
-
-    fs.writeFileSync(FILE, '{}');
-    return {};
-  }
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("⚠️ JSON corrupted → resetting file");
+        fs.writeFileSync(FILE, '{}');
+        return {};
+    }
 }
 
 /* =========================
-   SAVE
+   SAVE TO FILE
 ========================= */
-function save(data) {
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+function save() {
+    fs.writeFileSync(FILE, JSON.stringify(db, null, 2));
 }
 
 /* =========================
-   SET
+   GET ALL DATA
+========================= */
+function getAll() {
+    return db;
+}
+
+/* =========================
+   SET ENTRY
 ========================= */
 function set(id, value) {
-  const db = load();
-  db[id] = value;
-  save(db);
+    db[id] = value;
+    save();
 }
 
 /* =========================
-   REMOVE
+   REMOVE ENTRY
 ========================= */
 function remove(id) {
-  const db = load();
-  delete db[id];
-  save(db);
+    delete db[id];
+    save();
 }
 
-module.exports = { load, set, remove };
+/* =========================
+   OPTIONAL MANUAL RELOAD
+========================= */
+function reload() {
+    db = load();
+    return db;
+}
+
+module.exports = {
+    getAll,
+    set,
+    remove,
+    reload
+};
