@@ -12,7 +12,7 @@ module.exports = {
             .setColor(0xEF4444)
             .setTitle('🚪 Member Left')
             .setDescription(`${member.displayName} has left the server.`)
-            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+            .setImage(member.user.displayAvatarURL({ dynamic: true }))
 
         await channel.send({ embeds: [embed] });
     }
