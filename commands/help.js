@@ -50,4 +50,20 @@ module.exports = {
 
         return interaction.reply({ embeds: [embed] });
     }
+};                        '• `/gif combat` — Generate GIFs based on combat emojis 👊 🦶 ⚔️ 🔫\n' +
+                        '• `/gif powers` — Generate GIFs based on power emojis 🔥 ⚡ ❄️ 🌪️ 🌊 🪄\n' +
+                        `${space}`
+                },
+                {
+                    name: '🎂 Birthdays',
+                    value:
+                        '• `/birthday set` — Set your birthday\n' +
+                        '• `/birthday remove` — Remove your birthday\n' +
+                        '• `/birthday check` — Check a birthday\n' +
+                        '• `/birthday list` — Show upcoming and recent birthdays'
+                }
+            );
+
+        return interaction.reply({ embeds: [embed] });
+    }
 };
