@@ -61,7 +61,7 @@ function updateMemory(userId, content, mood, topic, intent) {
         username: `User${userId.slice(0,4)}`,
         messages: 0,
         lastMessage: "",
-        lastMood: "neutral",
+        lastMood: "null",
         favoriteTopic: null,
         conversationStreak: 0,
         topicsHistory: [],
@@ -120,7 +120,7 @@ function detectMood(content) {
         }
     }
 
-    let bestMood = "neutral";
+    let bestMood = "null";
     let highestScore = 0;
 
     for (const [mood, score] of Object.entries(moodScores)) {
@@ -476,18 +476,15 @@ client.on("messageCreate", async (message) => {
             negative: ["💀","😬"],
             fun: ["😂","🤣"],
             hype: ["🚀","🔥"],
-            love: ["❤️","🥰"],
-            neutral: ["👀","🤔"]
+            love: ["❤️","🥰"]
         };
 
-        const emoji =
-            pick(
-                emojiPool[mood] ||
-                emojiPool.neutral
-            );
+        const emojis = emojiPool[mood];
 
-        message.react(emoji)
-            .catch(() => {});
+if (emojis) {
+    const emoji = pick(emojis);
+    message.react(emoji).catch(() => {});
+}
     }
 });
 
