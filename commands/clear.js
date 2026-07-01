@@ -62,3 +62,31 @@ module.exports = {
         setTimeout(() => interaction.deleteReply().catch(() => {}), 5000);
     }
 };
+        if (targetUser) {
+            filtered = messages.filter(m => m.author.id === targetUser.id);
+        }
+
+        const toDelete = filtered.first(amount);
+
+        if (!toDelete || toDelete.length === 0) {
+            return interaction.reply({
+                content: "❌ No messages found to delete.",
+                flags: 64
+            });
+        }
+
+        await interaction.channel.bulkDelete(toDelete, true);
+
+        const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setDescription(
+                targetUser
+                    ? `✅ Deleted **${toDelete.length}** messages from **${targetUser.tag}**.`
+                    : `✅ Deleted **${toDelete.length}** messages.`
+            );
+
+        await interaction.reply({ embeds: [embed] });
+
+        setTimeout(() => interaction.deleteReply().catch(() => {}), 5000);
+    }
+};
