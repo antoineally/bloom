@@ -93,7 +93,7 @@ module.exports = {
        🧠 FIX: ORIGINAL ONLY ONCE
     ========================= */
 
-    const db = store.load();
+    const db = store.getAll();
 
     const originalNick =
       db[member.id]?.originalNick ?? member.displayName;
