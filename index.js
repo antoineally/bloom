@@ -99,28 +99,75 @@ function detectMood(content) {
         hype: 0,
         love: 0,
         frustrated: 0,
-        curious: 0
+        curious: 0,
+        suggestive: 0,   // New: Flirty / Suggestive
+        birthday: 0      // New: Birthday / Celebration
     };
 
     const keywords = {
-        positive: ["great", "awesome", "amazing", "good", "nice", "love", "perfect", "excellent", "happy", "thanks", "thank"],
-        negative: ["hate", "bad", "awful", "terrible", "worst", "sad", "angry", "annoying", "stupid"],
-        fun: ["lol", "lmao", "rofl", "haha", "xd", "😂", "🤣", "meme", "funny"],
-        hype: ["wow", "insane", "crazy", "fire", "legendary", "goat", "wtf", "🔥"],
-        love: ["love", "❤️", "cute", "adorable", "beautiful", "crush", "heart"],
-        frustrated: ["wtf", "why", "can't", "broken", "stuck", "help", "fix"],
-        curious: ["how", "why", "what if", "explain", "?"]
+        positive: [
+            "great", "awesome", "amazing", "good", "nice", "perfect", "excellent", 
+            "happy", "wonderful", "fantastic", "brilliant", "lovely", "super", 
+            "cool", "lit", "based", "goated", "blessed", "thanks", "thank", "appreciate"
+        ],
+        
+        negative: [
+            "hate", "bad", "awful", "terrible", "worst", "sad", "angry", "annoying", 
+            "stupid", "trash", "garbage", "horrible", "disgusting", "depressed", 
+            "sucks", "cringe", "pain", "bruh"
+        ],
+        
+        fun: [
+            "lol", "lmao", "rofl", "haha", "xd", "😂", "🤣", "meme", "funny", 
+            "hilarious", "joke", "laughing", "cracked", "dead", "crying", "ptdr", "mdr"
+        ],
+        
+        hype: [
+            "wow", "insane", "crazy", "fire", "legendary", "goat", "wtf", "🔥", 
+            "insane", "unreal", "banger", "peak", "pog", "letsgo", "goated"
+        ],
+        
+        love: [
+            "love", "❤️", "cute", "adorable", "beautiful", "gorgeous", "heart", 
+            "crush", "obsessed", "favorite", "bestie", "ily", "luv"
+        ],
+        
+        frustrated: [
+            "wtf", "why", "can't", "broken", "stuck", "help", "fix", "annoying", 
+            "stupid", "useless", "frustrated", "mad", "done", "tired", "exhausted"
+        ],
+        
+        curious: [
+            "how", "why", "what if", "explain", "?", "curious", "tell me", "how does",
+            "what do you think", "opinion", "thoughts"
+        ],
+
+        // 🔥 NEW: Suggestive / Flirty
+        suggestive: [
+            "sexy", "hot", "thicc", "thick", "baby", "daddy", "mommy", "naughty", 
+            "flirty", "kiss", "touch", "bed", "night together", "come over", 
+            "😏", "😈", "🍑", "🍆", "horny", "turn on", "tease"
+        ],
+
+        // 🎂 NEW: Birthday / Celebration
+        birthday: [
+            "birthday", "bday", "anniversary", "happy birthday", "hb", "born", 
+            "cake", "celebrate", "party", "wishing", "years old", "old today"
+        ]
     };
 
+    // Scoring logic
     for (const [mood, words] of Object.entries(keywords)) {
         for (const word of words) {
             if (text.includes(word)) {
-                moodScores[mood] += word.length > 3 ? 2 : 1;
+                // Longer/more specific words get higher weight
+                moodScores[mood] += word.length > 4 ? 2.5 : 1.5;
             }
         }
     }
 
-    let bestMood = "null";
+    // Find best mood
+    let bestMood = "neutral";
     let highestScore = 0;
 
     for (const [mood, score] of Object.entries(moodScores)) {
@@ -132,7 +179,6 @@ function detectMood(content) {
 
     return bestMood;
 }
-
 /* =========================
    INTENT & TOPIC DETECTION
 ========================= */
@@ -193,7 +239,19 @@ const RESPONSES = {
         "Ooh, good question...",
         "Let me think about that 👀",
         "Hmm, interesting..."
-    ]
+    ],
+    flirty: [
+    "Careful... you're making me blush 😳",
+    "You're being a little dangerous today 👀",
+    "Oh? Keep talking... 🍷",
+    "You always know what to say 😏",
+    "Someone woke up feeling confident 😌",
+    "You're testing me, aren't you? 😏",
+    "Well... that was smooth.",
+    "I see what you're doing 👀",
+    "You're kinda charming, not gonna lie.",
+    "You're playing a risky game 😏🍑"
+]
 };
 
 // Dynamic replies based on mood + topic
@@ -472,11 +530,13 @@ client.on("messageCreate", async (message) => {
     if (Math.random() < 0.65) {
 
         const emojiPool = {
-            positive: ["🔥","💯","👏"],
+            positive: ["🔥","💯","👏","🎉"],
             negative: ["💀","😬"],
+            birthday: ["🎂","🎁"],
             fun: ["😂","🤣"],
             hype: ["🚀","🔥"],
-            love: ["❤️","🥰"]
+            love: ["❤️","🥰","🫶"],
+            Flirty: ["🍑","💦","🍆","😈"]
         };
 
         const emojis = emojiPool[mood];
