@@ -44,64 +44,88 @@ function smartPick(arr, message) {
 }
 const cooldown = new Map();
 const userMemory = new Map();
-
 /* =========================
-   MOOD DETECTION
+   ADVANCED CHATBOT ENGINE
 ========================= */
 
-function detectMood(content) {
-    const text = content.toLowerCase();
 
-    const moods = {
-        positive: [
-            "thanks","thank you","awesome",
-            "great","amazing","perfect","nice"
-        ],
+function randomChance(percent) {
+    return Math.random() * 100 < percent;
+}
 
-        negative: [
-            "hate","bad","awful","terrible",
-            "sad","angry","worst"
-        ],
-
-        fun: [
-            "lol","lmao","rofl","xd",
-            "😂","🤣","meme"
-        ],
-
-        hype: [
-            "wow","wtf","insane",
-            "crazy","fire","legendary"
-        ],
-
-        love: [
-            "love","❤️","cute",
-            "adorable","beautiful"
-        ]
+/* =========================
+   MEMORY SYSTEM (Enhanced)
+========================= */
+function updateMemory(userId, content, mood, topic, intent) {
+    let memory = userMemory.get(userId) || {
+        username: `User${userId.slice(0,4)}`,
+        messages: 0,
+        lastMessage: "",
+        lastMood: "neutral",
+        favoriteTopic: null,
+        conversationStreak: 0,
+        topicsHistory: [],
+        lastInteraction: Date.now()
     };
 
-    let bestMood = "neutral";
-    let bestScore = 0;
+    memory.messages++;
+    memory.lastMessage = content;
+    memory.lastMood = mood;
+    memory.lastInteraction = Date.now();
 
-    for (const [mood, words] of Object.entries(moods)) {
+    if (topic) {
+        memory.favoriteTopic = topic;
+        memory.topicsHistory.push(topic);
+        if (memory.topicsHistory.length > 8) memory.topicsHistory.shift();
+    }
 
-        let score = 0;
+    if (intent === "greeting") memory.conversationStreak = 1;
+    else memory.conversationStreak++;
 
+    userMemory.set(userId, memory);
+    return memory;
+}
+
+/* =========================
+   MOOD DETECTION (More accurate)
+========================= */
+function detectMood(content) {
+    const text = content.toLowerCase().trim();
+    
+    const moodScores = {
+        positive: 0,
+        negative: 0,
+        fun: 0,
+        hype: 0,
+        love: 0,
+        frustrated: 0,
+        curious: 0
+    };
+
+    const keywords = {
+        positive: ["great", "awesome", "amazing", "good", "nice", "love", "perfect", "excellent", "happy", "thanks", "thank"],
+        negative: ["hate", "bad", "awful", "terrible", "worst", "sad", "angry", "annoying", "stupid"],
+        fun: ["lol", "lmao", "rofl", "haha", "xd", "😂", "🤣", "meme", "funny"],
+        hype: ["wow", "insane", "crazy", "fire", "legendary", "goat", "wtf", "🔥"],
+        love: ["love", "❤️", "cute", "adorable", "beautiful", "crush", "heart"],
+        frustrated: ["wtf", "why", "can't", "broken", "stuck", "help", "fix"],
+        curious: ["how", "why", "what if", "explain", "?"]
+    };
+
+    for (const [mood, words] of Object.entries(keywords)) {
         for (const word of words) {
-
-            const regex = new RegExp(
-                `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
-                "i"
-            );
-
-            if (regex.test(text))
-                score += 2;
-
-            if (text.includes(word))
-                score++;
+            if (text.includes(word)) {
+                moodScores[mood] += word.length > 3 ? 2 : 1;
+            }
         }
+    }
 
-        if (score > bestScore) {
-            bestScore = score;
+    let bestMood = "neutral";
+    let highestScore = 0;
+
+    for (const [mood, score] of Object.entries(moodScores)) {
+        if (score > highestScore) {
+            highestScore = score;
             bestMood = mood;
         }
     }
@@ -110,245 +134,230 @@ function detectMood(content) {
 }
 
 /* =========================
-   INTENT DETECTION
+   INTENT & TOPIC DETECTION
 ========================= */
-
 function detectIntent(content) {
-
     const text = content.toLowerCase();
+    
+    if (["hi", "hello", "hey", "sup", "yo", "morning", "evening"].some(w => text.includes(w))) 
+        return "greeting";
+    if (["bye", "goodbye", "cya", "see ya", "goodnight"].some(w => text.includes(w))) 
+        return "goodbye";
+    if (["thanks", "thank you", "ty", "merci"].some(w => text.includes(w))) 
+        return "thanks";
+    if (text.includes("?")) return "question";
 
-    const intents = {
-        greeting: [
-            "hi","hello","hey","yo","sup"
-        ],
-
-        goodbye: [
-            "bye","goodbye","cya",
-            "goodnight","gn"
-        ],
-
-        thanks: [
-            "thanks","thank you","ty"
-        ]
-    };
-
-    for (const [intent, words] of Object.entries(intents)) {
-        if (words.some(w => text.includes(w)))
-            return intent;
-    }
-
-    if (content.includes("?"))
-        return "question";
-
-    return null;
+    return "statement";
 }
 
-/* =========================
-   TOPIC DETECTION
-========================= */
-
 function detectTopic(content) {
-
     const text = content.toLowerCase();
-
+    
     const topics = {
-
-        gaming: [
-            "game","gaming","minecraft",
-            "fortnite","valorant",
-            "roblox","steam","xbox"
-        ],
-
-        coding: [
-            "code","coding","javascript",
-            "node","python","api",
-            "discord.js","bug","error"
-        ],
-
-        anime: [
-            "anime","manga","naruto",
-            "one piece","dragon ball"
-        ],
-
-        food: [
-            "pizza","burger","food",
-            "fries","chicken"
-        ],
-
-        music: [
-            "music","song","album",
-            "spotify","artist"
-        ],
-
-        sports: [
-            "nba","football","soccer",
-            "basketball","hockey"
-        ]
+        gaming: ["game", "gaming", "minecraft", "fortnite", "valorant", "league", "ranked", "lol"],
+        coding: ["code", "coding", "javascript", "python", "bug", "error", "debug", "api"],
+        anime: ["anime", "manga", "one piece", "jujutsu", "chainsaw", "naruto"],
+        music: ["music", "song", "album", "spotify", "playlist", "artist"],
+        food: ["food", "pizza", "burger", "eat", "hungry", "restaurant"],
+        sports: ["nba", "football", "soccer", "basketball", "match"],
+        life: ["life", "work", "school", "study", "tired", "stress"]
     };
 
     for (const [topic, words] of Object.entries(topics)) {
-        if (words.some(w => text.includes(w)))
-            return topic;
+        if (words.some(w => text.includes(w))) return topic;
     }
-
     return null;
 }
 
 /* =========================
-   RESPONSES
+   RESPONSE DATABASE (Rich & Varied)
 ========================= */
-
 const RESPONSES = {
-
     greeting: [
-        "Hey 👋",
-        "Yo 😎",
-        "What's up?",
-        "Hello there ✨"
+        "Hey! What's the vibe today? 😊",
+        "Yo! Good to see you ✨",
+        "Hello legend, what's up?",
+        "Hey there! Missed you 👀"
     ],
-
     goodbye: [
-        "See ya 👋",
-        "Take care 😎",
-        "Catch you later ✨"
+        "Catch you later! Take care 🔥",
+        "Bye legend 👋 Stay awesome",
+        "See ya! Don't forget to hydrate 💧"
     ],
-
     thanks: [
-        "You're welcome 😄",
-        "Anytime 👍",
-        "Glad I could help ✨"
+        "Always happy to help 😊",
+        "No problem at all!",
+        "My pleasure ✨"
     ],
-
     question: [
-        "Good question 🤔",
-        "Interesting 👀",
-        "Now you've got me thinking 🤔"
-    ],
-
-    positive: [
-        "Huge W 🔥",
-        "Love to hear it 👑",
-        "That's awesome 💯"
-    ],
-
-    negative: [
-        "Ouch 😬",
-        "That's rough 💀",
-        "Big yikes 😭"
-    ],
-
-    fun: [
-        "LMAO 😂",
-        "I'm dead 💀",
-        "That's hilarious 🤣"
-    ],
-
-    hype: [
-        "LET'S GO 🔥",
-        "Massive W 🚀",
-        "That's insane 🤯"
-    ],
-
-    love: [
-        "Awww ❤️",
-        "Wholesome 🥰",
-        "That's adorable 💖"
+        "Ooh, good question...",
+        "Let me think about that 👀",
+        "Hmm, interesting..."
     ]
 };
 
+// Dynamic replies based on mood + topic
+function getContextualReply(mood, topic, memory) {
+    const replies = [];
+
+    // Mood-based
+    if (mood === "positive") replies.push(...[
+        "Love this energy! 🔥",
+        "You're glowing today ✨",
+        "This is the vibe I live for"
+    ]);
+
+    if (mood === "fun") replies.push(...[
+        "I'm actually crying 😂",
+        "You got me dying over here",
+        "This is too good"
+    ]);
+
+    if (mood === "hype") replies.push(...[
+        "LETS GOOOOO 🚀",
+        "The energy is insane rn",
+        "You're on demon time 🔥"
+    ]);
+
+    if (mood === "love") replies.push(...[
+        "Aww stop, my heart 💕",
+        "This is too cute",
+        "Wholesome overload 🥰"
+    ]);
+
+    if (mood === "frustrated") replies.push(...[
+        "Damn, that sucks... Want to vent?",
+        "I'm here if you need to rant 💪",
+        "Take a breath, we got this"
+    ]);
+
+    // Topic-based
+    if (topic === "gaming") replies.push(...[
+        "Gamer moment detected 🎮",
+        "You trying to hit Immortal or what?",
+        "What's the current ranked struggle?"
+    ]);
+
+    if (topic === "coding") replies.push(...[
+        "Developer hours... I respect it 💻",
+        "Stack overflow hitting different today?",
+        "We debugging or we cooking?"
+    ]);
+
+    // Memory-aware
+    if (memory && memory.messages > 5 && randomChance(35)) {
+        replies.push(`We've been talking for a minute now, I like this energy 👀`);
+    }
+
+    return replies.length > 0 ? pick(replies) : null;
+}
+
 /* =========================
-   TOPIC REPLIES
+   MAIN MESSAGE HANDLER
 ========================= */
+function processMessage(userId, content, username = null) {
+    const mood = detectMood(content);
+    const intent = detectIntent(content);
+    const topic = detectTopic(content);
+    
+    const memory = updateMemory(userId, content, mood, topic, intent);
+    if (username) memory.username = username;
 
+    // 1. Specific Intent Handling
+    if (intent === "greeting" || intent === "goodbye" || intent === "thanks") {
+        return pick(RESPONSES[intent]);
+    }
+
+    // 2. Contextual Smart Reply
+    let reply = getContextualReply(mood, topic, memory);
+    if (reply) return reply;
+
+    // 3. Topic Reply
+    if (topic) {
+        const topicReplies = {
+            gaming: ["You playing anything good lately?", "What's the current meta looking like?"],
+            coding: ["What are you building right now?", "Any cool projects in the works?"],
+            anime: ["You caught up with the latest season?"],
+            music: ["Drop your current favorite song 👀"]
+        };
+        return pick(topicReplies[topic] || ["Tell me more about that!"]);
+    }
+
+    // 4. Mood-based fallback
+    if (mood === "curious" || intent === "question") {
+        return "That's actually a deep one... What's your take on it?";
+    }
+
+    // 5. Generic but natural replies
+    const generics = [
+        "No way, tell me more 👀",
+        "You're actually onto something...",
+        "This conversation is getting good",
+        "I'm locked in, keep going",
+        "Wait... fr? 😂"
+    ];
+
+    return pick(generics);
+}
+
+// For testing
+function simulateChat(userId, message) {
+    console.log(`User: ${message}`);
+    const response = processMessage(userId, message);
+    console.log(`Bot: ${response}\n`);
+    return response;
+}
+
+module.exports = { processMessage, simulateChat };
 function topicReply(topic) {
-
     const replies = {
-
         gaming: [
-            "Gamer detected 🎮",
-            "Sounds like a ranked experience 💀",
-            "GG 🔥"
+            "What are you playing lately?",
+            "Grinding ranked again?"
         ],
-
         coding: [
-            "Works on my machine 💻",
-            "Time to debug 🐛",
-            "Missing semicolon somewhere 😭"
+            "Working on a cool project?",
+            "Any bugs today? 💀"
         ],
-
         anime: [
-            "Main character energy ⚔️",
-            "Training arc begins 🔥"
+            "Watching anything good this season?"
         ],
-
-        food: [
-            "Now I'm hungry 🍕",
-            "That sounds amazing 🤤"
-        ],
-
         music: [
-            "Certified banger 🎵",
-            "Playlist worthy 🎧"
+            "What's on repeat right now?"
         ],
-
+        food: [
+            "Now I'm hungry 😂"
+        ],
         sports: [
-            "MVP moment 🏆",
-            "Huge play 🔥"
+            "Who are you rooting for?"
+        ],
+        life: [
+            "Hope everything's going well 💪"
         ]
     };
 
-    return pick(replies[topic]);
+    return pick(replies[topic] || ["Tell me more!"]);
 }
-
 /* =========================
-   MEMORY SYSTEM
+   MAIN HANDLER
 ========================= */
 
-function updateMemory(userId, content, topic, mood) {
-
-    const memory =
-        userMemory.get(userId) || {
-            lastMessage: "",
-            favoriteTopic: null,
-            messages: 0
-        };
-
-    memory.lastMessage = content;
-    memory.lastMood = mood;
-    memory.messages++;
-
-    if (topic)
-        memory.favoriteTopic = topic;
-
-    userMemory.set(userId, memory);
-}
-
 function memoryReply(userId, topic) {
-
     const memory = userMemory.get(userId);
 
     if (!memory) return null;
 
     if (
-        memory.favoriteTopic &&
         topic &&
-        memory.favoriteTopic === topic &&
-        Math.random() < 0.25
+        memory.favoriteTopic &&
+        topic === memory.favoriteTopic &&
+        memory.messages > 3
     ) {
-
-        return pick([
-            `Back to ${topic} again? 😎`,
-            `${topic} really is your thing 🔥`,
-            `Another ${topic} moment 👀`
-        ]);
+        return `You're really into ${topic} lately 👀`;
     }
 
     return null;
 }
-
-/* =========================
-   MAIN HANDLER
-========================= */
 
 client.on("messageCreate", async (message) => {
 
@@ -373,11 +382,12 @@ client.on("messageCreate", async (message) => {
     const topic = detectTopic(content);
 
     updateMemory(
-        userId,
-        content,
-        topic,
-        mood
-    );
+    userId,
+    content,
+    mood,
+    topic,
+    intent
+);
 
     /* COMPLIMENTS */
 
