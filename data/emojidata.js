@@ -142,7 +142,7 @@ const emojiData = {
     label: "Wink", 
     category: "suggestive", 
     query: "wink flirty", 
-    messages: ["${user.username} winks at {target} 😉"] 
+    messages: ["{user} winks at {target} 😉"] 
   },
   "🫦": { 
     label: "Seduce", 
@@ -282,7 +282,7 @@ const emojiData = {
     label: "Magic Spell", 
     category: "powers", 
     query: "magic spell", 
-    messages: ["${user} casts a spell on {target} 🪄"] 
+    messages: ["{user} casts a spell on {target} 🪄"] 
   }
 };
 
