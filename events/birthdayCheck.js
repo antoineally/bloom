@@ -62,11 +62,23 @@ module.exports = {
             'https://media.tenor.com/Kalf1rXmrxIAAAAm/happy-birthday.webp'
         ];
 
-        const birthdayMessages = [
-            id => `🎂 Today we celebrate <@${id}>!`,
-            id => `🥳 Happy Birthday <@${id}>!`,
-            id => `🎉 Wishing a great day to <@${id}>!`
-        ];
+       const birthdayMessages = [
+    id => `🎂 Today we celebrate <@${id}>!`,
+    id => `🥳 Happy Birthday <@${id}>!`,
+    id => `🎉 Wishing a great day to <@${id}>!`,
+    id => `🎈 Let's all wish <@${id}> an amazing birthday!`,
+    id => `🎁 It's a special day for <@${id}>!`,
+    id => `🍰 Everyone wish <@${id}> a fantastic birthday!`,
+    id => `🎊 Happy Birthday to our star <@${id}>!`,
+    id => `✨ May your day be filled with joy, <@${id}>!`,
+    id => `🥂 Celebrate <@${id}> today!`,
+    id => `🎇 Another year older, another year greater <@${id}>!`,
+    id => `🎉 Make some noise for <@${id}>'s birthday!`,
+    id => `🎂 Hope you have an unforgettable day, <@${id}>!`,
+    id => `🌟 Wishing lots of happiness to <@${id}> today!`,
+    id => `🎁 Everybody wish <@${id}> a wonderful birthday!`,
+    id => `🥳 Let's celebrate <@${id}> and make this day special!`
+];
 
         /* ================= CRON ================= */
         cron.schedule('0 9 * * *', async () => {
@@ -114,40 +126,50 @@ module.exports = {
                     return;
                 }
 
-                for (const userId of users) {
-                    try {
-                        const member = await guild.members.fetch(userId).catch(() => null);
-                        if (!member) continue;
+               let lastMessageIndex = logs.lastMessageIndex ?? -1;
 
-                        const embed = new EmbedBuilder()
-                            .setColor(0x7C3AED)
-                            .setTitle('🎉 Happy Birthday!')
-                            .setDescription(
-                                birthdayMessages[
-                                    Math.floor(Math.random() * birthdayMessages.length)
-                                ](userId)
-                            )
-                            .setThumbnail(member.user.displayAvatarURL())
-                            .setImage(
-                                birthdayGifs[
-                                    Math.floor(Math.random() * birthdayGifs.length)
-                                ]
-                            )
-                            .setFooter({ text: 'Birthday System 🎂' });
+for (const userId of users) {
+    try {
+        const member = await guild.members.fetch(userId).catch(() => null);
+        if (!member) continue;
 
-                        await channel.send({
-                            content: '@everyone 🎉',
-                            allowedMentions: { parse: ['everyone'] },
-                            embeds: [embed]
-                        });
+        const availableMessages = birthdayMessages
+            .map((_, index) => index)
+            .filter(index => index !== lastMessageIndex);
 
-                        console.log(`✅ Sent birthday for ${member.user.tag}`);
+        const messageIndex =
+            availableMessages[Math.floor(Math.random() * availableMessages.length)];
 
-                    } catch (err) {
-                        console.error('❌ Error sending birthday:', err);
-                    }
-                }
+        lastMessageIndex = messageIndex;
 
+        const embed = new EmbedBuilder()
+            .setColor(0x7C3AED)
+            .setTitle('🎉 Happy Birthday!')
+            .setDescription(
+                birthdayMessages[messageIndex](userId)
+            )
+            .setThumbnail(member.user.displayAvatarURL())
+            .setImage(
+                birthdayGifs[
+                    Math.floor(Math.random() * birthdayGifs.length)
+                ]
+            )
+            .setFooter({ text: 'Birthday System 🎂' });
+
+        await channel.send({
+            content: '@everyone 🎉',
+            allowedMentions: { parse: ['everyone'] },
+            embeds: [embed]
+        });
+
+        console.log(`✅ Sent birthday for ${member.user.tag}`);
+
+    } catch (err) {
+        console.error('❌ Error sending birthday:', err);
+    }
+}
+
+logs.lastMessageIndex = lastMessageIndex;
                 logs[today] = true;
                 saveLogs(logs);
 
