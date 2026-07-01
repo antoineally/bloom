@@ -55,11 +55,19 @@ const emojiData = {
     query: "birthday celebration", 
     messages: ["{user} celebrates {target}'s birthday 🎂"] 
   },
-  "🎉": { 
-    label: "Party", 
+
+  "☀️": { 
+    label: "Good morning", 
     category: "social", 
-    query: "party celebration", 
-    messages: ["{user} parties with {target} 🎉"] 
+    query: "Good morning", 
+    messages: ["{user} wishes good morning to {target} ☀️"] 
+  },
+
+  "🌙": { 
+    label: "Good night", 
+    category: "social", 
+    query: "Good night", 
+    messages: ["{user} wishes good night to {target} 🌙"] 
   },
    /* ================= REACTIONS ================= */
   "😂": { 
